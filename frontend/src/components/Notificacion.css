@@ -1,0 +1,25 @@
+.notificacion {
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    color: white;
+    text-align: center;
+    font-weight: 600;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.notificacion p {
+    margin: 0;
+}
+
+.notificacion.exito {
+    background-color: rgba(40, 167, 69, 0.4); 
+}
+
+.notificacion.error {
+    background-color: rgba(220, 53, 69, 0.4); 
+}
