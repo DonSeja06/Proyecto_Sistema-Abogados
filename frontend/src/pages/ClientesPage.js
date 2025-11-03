@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import clienteAxios from '../config/axios';
 import Notificacion from '../components/Notificacion';
 import Modal from '../components/Modal';
+import ConfirmacionModal from '../components/ConfirmacionModal';
 
 export default class ClientesPage extends Component {
     state = {
@@ -22,7 +23,12 @@ export default class ClientesPage extends Component {
         abogadosDisponibles: [],
         abogadoSeleccionadoId: '',
 
-        mostrarInactivos: false
+        mostrarInactivos: false,
+
+        confirmacionVisible: false,
+        accionConfirmar: null,
+        mensajeConfirmar: '',
+        tituloConfirmar: ''
     }
 
     componentDidMount() {
@@ -52,10 +58,17 @@ export default class ClientesPage extends Component {
         }
     }
 
-    desactivarCliente = async (id) => {
-        const confirmacion = window.confirm("¿Estás seguro de que deseas desactivar este cliente? Ya no aparecerá en las listas.");
-        if (!confirmacion) return;
+    solicitarDesactivarCliente = (id) => {
+        this.setState({
+            confirmacionVisible: true,
+            tituloConfirmar: 'Desactivar Cliente',
+            mensajeConfirmar: '¿Estás seguro de que deseas desactivar este cliente? Ya no aparecerá en las listas.',
+            accionConfirmar: () => this.ejecutarDesactivarCliente(id)
+        });
+    }
 
+    ejecutarDesactivarCliente = async (id) => {
+        this.cerrarConfirmacion();
         const token = localStorage.getItem('token');
         const config = { headers: { "Authorization": `Bearer ${token}` } };
         try {
@@ -64,11 +77,22 @@ export default class ClientesPage extends Component {
             this.obtenerClientes();
         } catch (error) {
             this.setState({ notificacion: { mensaje: 'Error al desactivar el cliente', tipo: 'error' } });
+        } finally {
+            setTimeout(() => this.setState({ notificacion: { mensaje: '', tipo: '' } }), 3000);
         }
     }
 
-    reactivarCliente = async (id) => {
-        if (!window.confirm("¿Seguro que deseas reactivar este cliente?")) return;
+    solicitarReactivarCliente = (id) => {
+        this.setState({
+            confirmacionVisible: true,
+            tituloConfirmar: 'Reactivar Cliente',
+            mensajeConfirmar: '¿Seguro que deseas reactivar este cliente?',
+            accionConfirmar: () => this.ejecutarReactivarCliente(id)
+        });
+    }
+
+    ejecutarReactivarCliente = async (id) => {
+        this.cerrarConfirmacion();
         const token = localStorage.getItem('token');
         const config = { headers: { "Authorization": `Bearer ${token}` } };
         try {
@@ -77,7 +101,13 @@ export default class ClientesPage extends Component {
             this.obtenerClientes();
         } catch (error) {
             this.setState({ notificacion: { mensaje: 'Error al reactivar el cliente', tipo: 'error' } });
+        } finally {
+            setTimeout(() => this.setState({ notificacion: { mensaje: '', tipo: '' } }), 3000);
         }
+    }
+
+    cerrarConfirmacion = () => {
+        this.setState({ confirmacionVisible: false, accionConfirmar: null, mensajeConfirmar: '', tituloConfirmar: '' });
     }
 
     onChange = e => {
@@ -192,7 +222,7 @@ export default class ClientesPage extends Component {
                                         <div>
                                             <button onClick={() => this.abrirModal(cliente)} className="btn btn-primary btn-sm me-2">Delegar</button>
                                             <Link to={`/clientes/editar/${cliente._id}`} className="btn btn-warning btn-sm me-2">Editar</Link>
-                                            <button onClick={() => this.desactivarCliente(cliente._id)} className="btn btn-secondary btn-sm">Desactivar</button>
+                                            <button onClick={() => this.solicitarDesactivarCliente(cliente._id)} className="btn btn-secondary btn-sm">Desactivar</button>
                                         </div>
                                     </li>
                                 ))}
@@ -205,7 +235,7 @@ export default class ClientesPage extends Component {
                                             <li className="list-group-item d-flex justify-content-between align-items-center" key={cliente._id} style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', opacity: 0.7, color: 'white', border: 'none', marginBottom: '10px', borderRadius: '8px' }}>
                                                 <div>{cliente.nombres} {cliente.apellidos}<br /><small>DNI: {cliente.dni}</small></div>
                                                 <div>
-                                                    <button onClick={() => this.reactivarCliente(cliente._id)} className="btn btn-success btn-sm">Reactivar</button>
+                                                    <button onClick={() => this.solicitarReactivarCliente(cliente._id)} className="btn btn-success btn-sm">Reactivar</button>
                                                 </div>
                                             </li>
                                         ))}
@@ -237,6 +267,14 @@ export default class ClientesPage extends Component {
                     </div>
                     <button onClick={this.handleDelegar} className="btn btn-success w-100">Confirmar Delegación</button>
                 </Modal>
+
+                <ConfirmacionModal
+                    mostrar={this.state.confirmacionVisible}
+                    titulo={this.state.tituloConfirmar}
+                    mensaje={this.state.mensajeConfirmar}
+                    onConfirmar={this.state.accionConfirmar}
+                    onCancelar={this.cerrarConfirmacion}
+                />
             </>
         )
     }
